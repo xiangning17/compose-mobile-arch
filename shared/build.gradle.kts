@@ -3,6 +3,7 @@ plugins {
     kotlin("native.cocoapods")
     id("com.android.library")
     id("org.jetbrains.compose")
+    id("dev.icerock.mobile.multiplatform-resources")
 }
 
 kotlin {
@@ -21,6 +22,9 @@ kotlin {
         framework {
             baseName = "shared"
             isStatic = true
+
+            export("dev.icerock.moko:resources:${versions.mokeResource}")
+            export("dev.icerock.moko:graphics:${versions.mokeGraphic}") // toUIColor here
         }
         extraSpecAttributes["resources"] = "['src/commonMain/resources/**', 'src/iosMain/resources/**']"
     }
@@ -33,13 +37,16 @@ kotlin {
                 implementation(compose.material)
                 @OptIn(org.jetbrains.compose.ExperimentalComposeLibrary::class)
                 implementation(compose.components.resources)
+
+                api("dev.icerock.moko:resources:${versions.mokeResource}")
+                api("dev.icerock.moko:resources-compose:${versions.mokeResource}")
             }
         }
         val androidMain by getting {
             dependencies {
-                api("androidx.activity:activity-compose:1.6.1")
-                api("androidx.appcompat:appcompat:1.6.1")
-                api("androidx.core:core-ktx:1.9.0")
+                api("androidx.activity:activity-compose:${versions.android.androidx.activity}")
+                api("androidx.appcompat:appcompat:${versions.android.androidx.appcompat}")
+                api("androidx.core:core-ktx:${versions.android.androidx.core}")
             }
         }
         val iosX64Main by getting
@@ -55,7 +62,7 @@ kotlin {
 }
 
 android {
-    compileSdk = (findProperty("android.compileSdk") as String).toInt()
+    compileSdk = versions.android.compileSdk.toInt()
     namespace = "com.myapplication.common"
 
     sourceSets["main"].manifest.srcFile("src/androidMain/AndroidManifest.xml")
@@ -63,8 +70,8 @@ android {
     sourceSets["main"].resources.srcDirs("src/commonMain/resources")
 
     defaultConfig {
-        minSdk = (findProperty("android.minSdk") as String).toInt()
-        targetSdk = (findProperty("android.targetSdk") as String).toInt()
+        minSdk = versions.android.minSdk.toInt()
+        targetSdk = versions.android.targetSdk.toInt()
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -73,4 +80,12 @@ android {
     kotlin {
         jvmToolchain(11)
     }
+}
+
+multiplatformResources {
+    multiplatformResourcesPackage = "com.xiangning.resource" // required
+    multiplatformResourcesClassName = "SharedRes" // optional, default MR
+    multiplatformResourcesVisibility = dev.icerock.gradle.MRVisibility.Internal // optional, default Public
+    iosBaseLocalizationRegion = "en" // optional, default "en"
+    multiplatformResourcesSourceSet = "commonMain"  // optional, default "commonMain"
 }
